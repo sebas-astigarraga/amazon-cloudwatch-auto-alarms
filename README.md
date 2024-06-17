@@ -1,4 +1,4 @@
-# CloudWatchAutoAlarms - Automatically create a set of CloudWatch alarms with tagging
+# CloudWatchAutoAlarms: cree automáticamente un conjunto de alarmas de CloudWatch con etiquetado
 
 ![CloudWatchAutoAlarms Architecture Diagram](./CloudWatchAutoAlarmsArchitecture.png)
 
