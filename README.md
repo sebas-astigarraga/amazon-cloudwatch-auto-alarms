@@ -60,63 +60,68 @@ Las alarmas se pueden actualizar cambiando la clave o el valor de la etiqueta y 
 
 ## Configuración
 
-There are a number of settings that can be customized by updating the CloudWatchAutoAlarms Lambda function environment variables defined in the [CloudWatchAutoAlarms.yaml](./CloudWatchAutoAlarms.yaml) CloudFormation template.
-The settings will only affect new alarms that you create so you should customize these values to meet your requirements before you deploy the Lambda function.
-The following list provides a description of the setting along with the environment variable name and default value:
+Hay una serie de configuraciones que se pueden personalizar actualizando las variables de entorno de la función Lambda de CloudWatchAutoAlarms definidas en el template de CloudFormation denominado [CloudWatchAutoAlarms.yaml](./CloudWatchAutoAlarms.yaml).
+La configuración solo afectará a las alarmas nuevas que cree, por lo que debe personalizar estos valores para cumplir con sus requisitos antes de implementar la función Lambda. La siguiente lista proporciona una descripción de la configuración junto con el nombre de la variable de entorno y el valor predeterminado:
 
 * **ALARM_TAG**: Create_Auto_Alarms
-    * The CloudWatchAutoAlarms Lambda function will only create alarms for instances that are tagged with this name tag.  The default tag name is Create_Auto_Alarms.  If you want to use a different name, change the value of the ALARM_TAG environment variable.
+    * La función Lambda CloudWatchAutoAlarms solo creará alarmas para instancias etiquetadas con esta etiqueta. El nombre de la etiqueta predeterminada es Create_Auto_Alarms. Si desea utilizar un nombre diferente, cambie el valor de la variable de entorno ALARM_TAG.
 * **CREATE_DEFAULT_ALARMS**: true
-    * When true, this will result in the default alarm set being created when the **Create_Auto_Alarms** tag is present.  If set to false, then alarms will be created only for the alarm tags  defined on the instance.
+    * Cuando es true, esto dará como resultado que se cree el conjunto de alarma predeterminado cuando la etiqueta **Create_Auto_Alarms** esté presente. Si se establece en false, las alarmas se crearán solo para las etiquetas de alarma definidas en la instancia.
 * **CLOUDWATCH_NAMESPACE**: CWAgent
-    * You can change the namespace where the Lambda function should look for your CloudWatch metrics. The default CloudWatch agent metrics namespace is CWAgent.  If your CloudWatch agent configuration is using a different namespace, then update the  CLOUDWATCH_NAMESPACE environment variable.
+    * Puede cambiar el espacio de nombres donde la función Lambda debe buscar sus métricas de CloudWatch. El espacio de nombres de métricas del agente de CloudWatch predeterminado es CWAgent. Si la configuración de su agente de CloudWatch utiliza un namespace diferente, actualice esta variable de entorno.
 * **CLOUDWATCH_APPEND_DIMENSIONS**: InstanceId, ImageId, InstanceType, AutoScalingGroupName
-    * You can add EC2 metric dimensions to all metrics collected by the CloudWatch agent.  This environment variable aligns to your CloudWatch configuration setting for [**append_dimensions**](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html#CloudWatch-Agent-Configuration-File-Metricssection).  The default setting includes all the supported dimensions:  InstanceId, ImageId, InstanceType, AutoScalingGroupName
+    * Puede agregar dimensiones de métricas EC2 a todas las métricas recopiladas por el agente de CloudWatch. Esta variable de entorno se alinea con su configuración de CloudWatch para [**append_dimensions**](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html#CloudWatch-Agent-Configuration-File-Metricssection).  La configuración predeterminada incluye todas las dimensiones admitidas: InstanceId, ImageId, InstanceType, AutoScalingGroupName.
 * **DEFAULT_ALARM_SNS_TOPIC_ARN**:  arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:CloudWatchAutoAlarmsSNSTopic
-    * You can define an Amazon Simple Notification Service (Amazon SNS) topic that the Lambda function will specify as the notification target for created alarms. The deployment instructions include an SNS topic that you can deploy and use with the solution.  You provide the Amazon SNS Topic Amazon Resource Name (ARN) with the **AlarmNotificationARN** parameter when you deploy the CloudWatchAutoAlarms.yaml CloudFormation template.  If you leave the **AlarmNotificationARN** parameter value blank, then this environment variable is not set and created alarms won't use notifications.  The solution also enables you to specify a unique SNS topic per AWS resource by including a tag with key **`notify`** with the value set to the SNS topic ARN that should be targeted for alarms for that specific resource.
+    * Puede definir un tema de Amazon SNS que la función Lambda especificará como destino de notificación para las alarmas creadas. Las instrucciones de implementación incluyen un topic SNS que puede implementar y utilizar con la solución. Usted proporciona el nombre de recurso de Amazon (ARN) del tema de Amazon SNS con el parámetro **AlarmNotificationARN** cuando implementa la plantilla de CloudFormation CloudWatchAutoAlarms.yaml. Si deja el valor del parámetro **AlarmNotificationARN** en blanco, esta variable de entorno no se establece y las alarmas creadas no utilizarán notificaciones. La solución también permite especificar un tema de SNS único por recurso de AWS al incluir una etiqueta con la key **`notify`** con el valor establecido en el ARN del topic SNS que debe ser el destino de las alarmas para ese recurso específico.
 * **ALARM_IDENTIFIER_PREFIX**:  AutoAlarm
-    * The prefix name that is added to the beginning of each CloudWatch alarm created by the solution.  (e.g. For "AutoAlarm":  (e.g. AutoAlarm-i-00e4f327736cb077f-CPUUtilization-GreaterThanThreshold-80-5m))  You should update this variable via the **AlarmIdentifierPrefix** in the [CloudWatchAutoAlarms.yaml](./CloudWatchAutoAlarms.yaml) CloudFormation template so that the IAM policy is updated to align with your custom name.
+    * El nombre del prefijo que se agrega al principio de cada alarma de CloudWatch creada por la solución.  (por ejemplo para "AutoAlarm":  [AutoAlarm-i-00e4f327736cb077f-CPUUtilization-GreaterThanThreshold-80-5m]). Debe actualizar esta variable a través de **AlarmIdentifierPrefix** en la plantilla de CloudFormation [CloudWatchAutoAlarms.yaml](./CloudWatchAutoAlarms.yaml) para que la política de IAM se actualice a modo de alinearse con su nombre personalizado.
 
-You can update the thresholds for the default alarms by updating the following environment variables:
+Puede actualizar los umbrales de las alarmas predeterminadas actualizando las siguientes variables de entorno:
 
-   **For Anomaly Detection Alarms**:
-    * **ALARM_DEFAULT_ANOMALY_THRESHOLD**: 2
-   **For Amazon EC2**:
-    * **ALARM_CPU_HIGH_THRESHOLD**: 75
-    * **ALARM_CPU_CREDIT_BALANCE_LOW_THRESHOLD**: 100
-    * **ALARM_MEMORY_HIGH_THRESHOLD**: 75
-    * **ALARM_DISK_PERCENT_LOW_THRESHOLD**: 20
+   **Para alarmas de detección de anomalías**:
 
-   **For AWS RDS**:
-    * **ALARM_RDS_CPU_HIGH_THRESHOLD**: 75
+    ALARM_DEFAULT_ANOMALY_THRESHOLD: 2
 
-   **For AWS Lambda**:
-    * **ALARM_LAMBDA_ERROR_THRESHOLD**: 0
-    * **ALARM_LAMBDA_THROTTLE_THRESHOLD**: 0
+   **Para Amazon EC2**:
 
-## Deploy
+    ALARM_CPU_HIGH_THRESHOLD: 75
+    ALARM_CPU_CREDIT_BALANCE_LOW_THRESHOLD: 100
+    ALARM_MEMORY_HIGH_THRESHOLD: 75
+    ALARM_DISK_PERCENT_LOW_THRESHOLD: 20
 
-1. Clone the amazon-cloudwatch-auto-alarms github repository to your computer using the following command:
+   **Para AWS RDS**:
+
+    ALARM_RDS_CPU_HIGH_THRESHOLD: 75
+
+   **Para AWS Lambda**:
+
+    ALARM_LAMBDA_ERROR_THRESHOLD: 0
+    ALARM_LAMBDA_THROTTLE_THRESHOLD: 0
+
+## Desplegar
+
+1. Clona el repositorio github de amazon-cloudwatch-auto-alarms en tu computadora usando el siguiente comando:
 
        git clone https://github.com/aws-samples/amazon-cloudwatch-auto-alarms
-2. Configure the AWS CLI with credentials for your AWS account.  This walkthrough uses temporary credentials provided by AWS Single Sign On using the **Command line or programmatic access** option.  This sets the **AWS_ACCESS_KEY_ID**, **AWS_SECRET_ACCESS_KEY**, and **AWS_SESSION_TOKEN** AWS environment variables with the appropriate credentials for use with the AWS CLI.
-3. Create an Amazon SNS topic that CloudWatchAutoAlarms will use for notifications. You can use this sample Amazon SNS CloudFormation template to create an SNS topic.  Leave the OrganizationID parameter blank, it is used for multi-account deployments.
+
+2. Configure la AWS CLI con las credenciales para su cuenta de AWS. Este tutorial utiliza credenciales temporales proporcionadas por AWS Single Sign On mediante la opción **Línea de comando o acceso programático**. Esto establece las variables de entorno de AWS **AWS_ACCESS_KEY_ID**, **AWS_SECRET_ACCESS_KEY** y **AWS_SESSION_TOKEN** con las credenciales adecuadas para usar con la CLI de AWS.
+3. Cree un topic de Amazon SNS que CloudWatchAutoAlarms utilizará para las notificaciones. Puede utilizar este template de muestra de Amazon SNS CloudFormation para crear un topic de SNS. Deje el parámetro OrganizationID en blanco; se utiliza para implementaciones de múltiples cuentas.
 
        aws cloudformation create-stack --stack-name amazon-cloudwatch-auto-alarms-sns-topic \
        --template-body file://CloudWatchAutoAlarms-SNS.yaml \
        --parameters ParameterKey=OrganizationID,ParameterValue="" \
        --region <enter your aws region id, e.g. "us-east-1">
-4. Create an S3 bucket that will be used to store and access the CloudWatchAutoAlarms lambda function deployment package if you don't have one.  You can use [this sample S3 CloudFormation template](./CloudWatchAutoAlarms-S3.yaml).  You can leave the AWS Organizations ID parameter blank if this lambda function will only be deployed in your current account:
+4. Cree un S3 bucket que se utilizará para almacenar y acceder al paquete de implementación de la función lambda de CloudWatchAutoAlarms si no tiene uno. Puede utilizar [este template de muestra de S3 CloudFormation](./CloudWatchAutoAlarms-S3.yaml). Puede dejar el parámetro ID de AWS Organizations en blanco si esta función lambda solo se implementará en su cuenta AWS actual:
 
        aws cloudformation create-stack --stack-name amazon-cloudwatch-auto-alarms-s3-bucket \
         --template-body file://CloudWatchAutoAlarms-S3.yaml \
         --parameters ParameterKey=OrganizationID,ParameterValue="" \
         --region <enter your aws region id, e.g. "us-east-1">
-5. Update the environment variables in the [CloudWatchAutoAlarms CloudFormation template](./CloudWatchAutoAlarms.yaml) to configure default settings such as alarm thresholds.
-6. Create a zip file containing the CloudWatchAutoAlarms AWS Lambda function code located in the [src](./src) directory.  This is the deployment package that you will use to deploy the AWS Lambda function.  On a Mac, you can use the zip command:
+5. Actualice las variables de entorno en el template CloudFormation de [CloudWatchAutoAlarms](./CloudWatchAutoAlarms.yaml) para configurar los ajustes predeterminados, como los umbrales de alarma.
+6. Cree un archivo zip que contenga el código de función AWS Lambda de CloudWatchAutoAlarms ubicado en el directorio [src](./src). Este es el paquete de implementación que utilizará para implementar la función AWS Lambda. En una Mac, puedes usar el comando zip:
 
        zip -j amazon-cloudwatch-auto-alarms.zip src/*
-7. Copy the **amazon-cloudwatch-auto-alarms.zip** file to your S3 bucket.
+7. Copie el archivo **amazon-cloudwatch-auto-alarms.zip** a su S3 bucket.
 
        aws s3 cp amazon-cloudwatch-auto-alarms.zip s3://<bucket name>
 
