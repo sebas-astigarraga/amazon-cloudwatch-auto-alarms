@@ -2,64 +2,63 @@
 
 ![CloudWatchAutoAlarms Architecture Diagram](./CloudWatchAutoAlarmsArchitecture.png)
 
-The CloudWatchAutoAlarms AWS Lambda function enables you to quickly and automatically create a standard set of CloudWatch alarms for your Amazon EC2 instances or AWS Lambda functions using tags.  It prevents errors that may occur by manually creating alarms, reduces the time required to deploy alarms, and reduces the skills gap required in order to create and manage alarms.  It can be especially useful during a large migration to AWS where many resources may be migrated into your AWS account at once.
+La función AWS Lambda CloudWatchAutoAlarms permite crear rápida y automáticamente un conjunto estándar de alarmas de CloudWatch para sus instancias Amazon EC2 o funciones AWS Lambda mediante etiquetas. Previene errores que pueden ocurrir al crear alarmas manualmente, reduce el tiempo necesario para implementar alarmas y reduce la falta de habilidades necesarias para crear y administrar alarmas. Puede resultar especialmente útil durante una migración grande a AWS, donde se pueden migrar muchos recursos a su cuenta de AWS a la vez.
 
-The default configuration creates alarms for the following Amazon EC2 metrics for Windows, Amazon Linux, Redhat, Ubuntu, or SUSE EC2 instances:
+La configuración predeterminada crea alarmas para las siguientes métricas de Amazon EC2 para instancias de Windows, Amazon Linux, Redhat, Ubuntu o SUSE EC2:
 *  CPU Utilization
-*  CPU Credit Balance (For T Class instances)
+*  CPU Credit Balance (Para instancias de clase T)
 *  Disk Space Used % (Amazon CloudWatch agent [predefined basic metric](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/create-cloudwatch-agent-configuration-file-wizard.html))
 *  Memory Used % (Amazon CloudWatch agent [predefined basic metric](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/create-cloudwatch-agent-configuration-file-wizard.html))
 
-The default configuration creates alarms for the following [AWS RDS metrics](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-metrics.html):
+La configuración predeterminada crea alarmas para la siguiente [métrica de AWS RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-metrics.html):
 
 * CPU Utilization
 
-Alarms are created for RDS clusters as well as RDS database instances.
+Las alarmas se crean para clústeres de RDS, así como para instancias de bases de datos de RDS.
 
-The default configuration also creates alarms for the following [AWS Lambda metrics](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-metrics.html#monitoring-metrics-types):
+La configuración predeterminada también crea alarmas para las siguientes [métricas de AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-metrics.html#monitoring-metrics-types):
 
 * Errors
 * Throttles
 
-You can change or add alarms by updating the **default_alarms** dictionary in [cw_auto_alarms.py](src/cw_auto_alarms.py).
+Puede cambiar o agregar alarmas actualizando el diccionario **default_alarms** en [cw_auto_alarms.py](src/cw_auto_alarms.py).
 
-The created alarms can be configured to notify an Amazon SNS topic that you specify using the **DEFAULT_ALARM_SNS_TOPIC_ARN** environment variable.  See the **Setup** section for details.
+Las alarmas creadas se pueden configurar para notificar un tema de Amazon SNS que especifique mediante la variable de entorno **DEFAULT_ALARM_SNS_TOPIC_ARN**. Consulte la sección **Configuración** para obtener más detalles.
 
-The Amazon CloudWatch alarms are created when an EC2 instance with the tag key **Create_Auto_Alarms** enters the **running** state and they are deleted when the instance is **terminated**.
-Alarms can be created when an instance is first launched or afterwards by stopping and starting the instance.
+Las alarmas de Amazon CloudWatch se crean cuando una instancia EC2 con la clave de etiqueta **Create_Auto_Alarms** ingresa al estado **running** y se eliminan cuando la instancia se encuentra en estado **terminated**.
+Se pueden crear alarmas cuando se lanza una instancia por primera vez o después deteniéndola e iniciándola.
 
-The alarms are created and configured based on EC2 tags which include the metric name, comparison, period, statistic, and threshold.
+Las alarmas se crean y configuran en función de etiquetas EC2 que incluyen el nombre de la métrica, la comparación, el período, la estadística y el umbral.
 
-The tag name syntax for AWS provided metrics is:
+La sintaxis del nombre de etiqueta para las métricas proporcionadas por AWS es:
 
 AutoAlarm-\<**Namespace**>-\<**MetricName**>-\<**ComparisonOperator**>-\<**Period**>-\<**EvaluationPeriods**>-\<**Statistic**>-\<**Description**>
 
-Where:
+Donde:
 
-* **Namespace** is the CloudWatch Alarms namespace for the metric.  For AWS provided EC2 metrics, this is **AWS/EC2**.  For CloudWatch agent provided metrics, this is CWAgent by default.
-    You can also specify a different name as described in the **Configuration** section.
-* **MetricName** is the name of the metric.  For example, CPUUtilization for EC2 total CPU utilization.
-* **ComparisonOperator** is the comparison that should be used aligning to the ComparisonOperator parameter in the [PutMetricData](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html) Amazon CloudWatch API action.
-* **Period** is the length of time used to evaluate the metric.  You can specify an integer value followed by s for seconds, m for minutes, h for hours, d for days, and w for weeks.  Your evaluation period should observe CloudWatch evaluation period limits.
-* **EvaluationPeriods** is the number of periods on which to evaluate the alarm.  This property is optional and if it is left out, defaults to 1.
-* **Statistic** is the statistic for the MetricName specified, other than percentile.
-* **Description** is the description for the CloudWatch Alarm.  This property is optional, and if it is left out then a default description is used.
+* **Namespace** es el espacio de nombres de CloudWatch Alarms para la métrica. Para las métricas EC2 proporcionadas por AWS, esto es **AWS/EC2**. Para las métricas proporcionadas por el agente de CloudWatch, este es CWAgent de forma predeterminada. También puede especificar un nombre diferente como se describe en la sección **Configuración**.
+* **MetricName** es el nombre de la métrica. Por ejemplo, CPUUtilization para la utilización total de CPU de EC2.
+* **ComparisonOperator** es la comparación que se debe utilizar alineada con el parámetro ComparisonOperator en la acción [PutMetricData](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html) de la API de Amazon CloudWatch.
+* **Period** es el tiempo utilizado para evaluar la métrica.  Puede especificar un valor entero seguido de s para segundos, m para minutos, h para horas, d para días y w para semanas. Su período de evaluación debe respetar los límites del período de evaluación de CloudWatch.
+* **EvaluationPeriods** es el número de períodos en los que se evalúa la alarma. Esta propiedad es opcional y, si se omite, el valor predeterminado es 1.
+* **Statistic** es la estadística del nombre de métrica especificado, distinta del percentil.
+* **Description** es la descripción de la alarma CloudWatch. Esta propiedad es opcional y, si se omite, se utiliza una descripción predeterminada.
 
-The tag value is used to specify the threshold.  You can also [create alarms for custom Amazon CloudWatch metrics](#alarming-on-custom-amazon-ec2-metrics).
+El valor de la etiqueta se utiliza para especificar el umbral. También puede [crear alarmas para métricas personalizadas de Amazon CloudWatch](#alarming-on-custom-amazon-ec2-metrics).
 
-For example, one of the preconfigured, default alarms that are included in the **default_alarms** dictionary is **AutoAlarm-AWS/EC2-CPUUtilization-GreaterThanThreshold-5m-1-Average-Created_by_CloudWatchAutoAlarms**.
-When an instance with the tag key **Create_Auto_Alarms** enters the **running** state, an alarm for the AWS provided **CPUUtilization** CloudWatch EC2 metric will be created.
-Additional alarms will also be created for the EC2 instance based on the platform and alarms defined in the **default_alarms** python dictionary defined in [cw_auto_alarms.py](src/cw_auto_alarms.py).
+Por ejemplo, una de las alarmas predeterminadas preconfiguradas que se incluyen en el diccionario **default_alarms** es **AutoAlarm-AWS/EC2-CPUUtilization-GreaterThanThreshold-5m-1-Average-Created_by_CloudWatchAutoAlarms**.
+Cuando una instancia con la clave de etiqueta **Create_Auto_Alarms** ingresa al estado **running**, se creará una alarma para la métrica **CPUUtilization** CloudWatch EC2 proporcionada por AWS.
+También se crearán alarmas adicionales para la instancia EC2 según la plataforma y las alarmas definidas en el diccionario de Python **default_alarms** definido en [cw_auto_alarms.py](src/cw_auto_alarms.py).
 
-Alarms can be updated by changing the tag key or value and stopping and starting the instance.
+Las alarmas se pueden actualizar cambiando la clave o el valor de la etiqueta y deteniendo e iniciando la instancia.
 
-## Requirements
+## Requerimientos
 
-1. The AWS CLI is required to deploy the Lambda function using the deployment instructions.
-2. The AWS CLI should be configured with valid credentials to create the CloudFormation stack, lambda function, and related resources.  You must also have rights to upload new objects to the S3 bucket you specify in the deployment steps.
-3. EC2 instances must have the CloudWatch agent installed and configured with [the basic, standard, or advanced predefined metric sets](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/create-cloudwatch-agent-configuration-file-wizard.html) in order for the default alarms for custom CloudWatch metrics to work.  Scripts named [userdata_linux_basic.sh](./userdata_linux_basic.sh), [userdata_linux_standard.sh](./userdata_linux_standard.sh), and [userdata_linux_advanced.sh](./userdata_linux_advanced.sh) are provided to install and configure the CloudWatch agent on Linux based EC2 instances with their respective predefined metric sets.
+1. Se requiere la AWS CLI para implementar la función Lambda mediante las instrucciones de implementación.
+2. La AWS CLI debe configurarse con credenciales válidas para crear la pila de CloudFormation, la función lambda y los recursos relacionados. También debe tener derechos para cargar nuevos objetos en el depósito de S3 que especifique en los pasos de implementación.
+3. Las instancias EC2 deben tener el agente de CloudWatch instalado y configurado con [los conjuntos de métricas predefinidas básicas, estándar o avanzadas](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/create-cloudwatch-agent-configuration-file-wizard.html) para que funcionen las alarmas predeterminadas para las métricas personalizadas de CloudWatch. Se proporcionan los scripts denominados [userdata_linux_basic.sh](./userdata_linux_basic.sh), [userdata_linux_standard.sh](./userdata_linux_standard.sh), and [userdata_linux_advanced.sh](./userdata_linux_advanced.sh) para instalar y configurar el agente de CloudWatch en instancias EC2 basadas en Linux con sus respectivos conjuntos de métricas predefinidas.
 
-## Setup
+## Configuración
 
 There are a number of settings that can be customized by updating the CloudWatchAutoAlarms Lambda function environment variables defined in the [CloudWatchAutoAlarms.yaml](./CloudWatchAutoAlarms.yaml) CloudFormation template.
 The settings will only affect new alarms that you create so you should customize these values to meet your requirements before you deploy the Lambda function.
