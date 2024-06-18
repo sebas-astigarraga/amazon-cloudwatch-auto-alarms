@@ -125,14 +125,14 @@ Puede actualizar los umbrales de las alarmas predeterminadas actualizando las si
 
        aws s3 cp amazon-cloudwatch-auto-alarms.zip s3://<bucket name>
 
-   If you created an S3 bucket using [this sample S3 CloudFormation template](./CloudWatchAutoAlarms-S3.yaml) in step 3, then you can get the bucket name from the AWS Management console or run the following AWS CLI command:
+   Si creó el bucket S3 utilizando [este template de muestra de S3 CloudFormation](./CloudWatchAutoAlarms-S3.yaml) en el paso 3, puede obtener el nombre del depósito desde la consola de administración de AWS o ejecutar el siguiente comando de AWS CLI:
 
        aws cloudformation describe-stacks --stack-name amazon-cloudwatch-auto-alarms-s3-bucket \
        --query "Stacks[0].Outputs[?ExportName=='amazon-cloudwatch-auto-alarms-bucket-name'].OutputValue" \
        --output text \
        --region <enter your aws region id, e.g. "us-east-1">
 
-8. Deploy the AWS lambda function using the deployment package you uploaded to your S3 bucket:
+8. Implemente la función lambda de AWS utilizando el paquete de despliegue que cargó en su bucket S3:
 
        aws cloudformation create-stack --stack-name amazon-cloudwatch-auto-alarms \
        --template-body file://CloudWatchAutoAlarms.yaml \
@@ -142,49 +142,46 @@ Puede actualizar los umbrales de las alarmas predeterminadas actualizando las si
        ParameterKey=AlarmNotificationARN,ParameterValue=<SNS Topic ARN for Alarm Notifications> \
        --region <enter your aws region id, e.g. "us-east-1">
 
-   If you don't want to enable SNS notifications, you can set the **ParameterValue** to **""** for **AlarmNotificationARN**.
+   Si no desea habilitar las notificaciones SNS, puede configurar **ParameterValue** en **""** para **AlarmNotificationARN**.
 
-   You can retrieve the SNS Topic ARN from step #3 for the **AlarmNotificationARN** parameter value by running the following command:
+   Puede recuperar el ARN del tema SNS del paso 3 para el valor del parámetro **AlarmNotificationARN** ejecutando el siguiente comando:
 
        aws cloudformation describe-stacks --stack-name amazon-cloudwatch-auto-alarms-sns-topic \
        --query "Stacks[0].Outputs[?ExportName=='amazon-cloudwatch-auto-alarms-sns-topic-arn'].OutputValue" \
        --output text --region <enter your aws region id, e.g. "us-east-1">
 
-## Activate
+## Activar
 
 ### Amazon EC2
-In order to create the default alarm set for an Amazon EC2 instance or AWS Lambda function, you simply need to tag the Amazon EC2 instance or AWS Lambda function with the activation tag key defined by the **ALARM_TAG** environment variable.  The default tag activation key is **Create_Auto_Alarms**.
+Para crear el conjunto de alarmas predeterminado para una instancia de Amazon EC2 o una función AWS Lambda, simplemente necesita etiquetar la instancia EC2 o la función Lambda con la clave de etiqueta para la activación definida por la variable de entorno **ALARM_TAG**. La clave de activación de etiqueta predeterminada es **Create_Auto_Alarms**.
 
-For Amazon EC2 instances, you must add this tag during instance launch or you can add this tag at any time to an instance and then stop and start the instance in order to create the default alarm set as well as any custom, instance specific alarms.
+Para las instancias Amazon EC2, debe agregar esta etiqueta durante el lanzamiento de la instancia o puede agregar esta etiqueta en cualquier momento a una instancia y luego detenerla e iniciarla para crear el conjunto de alarmas predeterminado, así como cualquier alarma personalizada específica de la instancia.
 
-You can also manually invoke the CloudWatchAutoAlarms lambda function with the following event payload to create / update EC2 alarms without having to stop and start your EC2 instances:
-
+También puede invocar manualmente la función lambda de CloudWatchAutoAlarms con la siguiente carga útil de eventos para crear/actualizar alarmas EC2 sin tener que detener e iniciar sus instancias EC2:
 ```json
 {
   "action": "scan"
 }
 ```
-You can do this with a test execution of the CloudWatchAUtoAlarms AWS Lambda function.  Open the AWS Lambda Management Console and perform a test invocation from the **Test** tab with the payload provided here.
+Puede hacer esto con una ejecución de prueba de la función CloudWatchAutoAlarms AWS Lambda. Abra la Consola de administración de AWS Lambda y realice una invocación de prueba desde la pestaña **Test** con la carga útil que se proporciona aquí.
 
-The [CloudWatchAutoAlarms.yaml](CloudWatchAutoAlarms.yaml) template includes two CloudWatch event rules.  One invokes the Lambda function on `running` and `terminated` instance states.  The other invokes the Lambda function on a daily schedule.  The daily scheduled event will update any existing alarms and also create any alarms with wildcard tags. 
+El template [CloudWatchAutoAlarms.yaml](CloudWatchAutoAlarms.yaml) incluye dos reglas de eventos de CloudWatch. Se invoca la función Lambda en los estados de instancia en `running` y `terminated`. El otro invoca la función Lambda en un horario diario. El evento programado diariamente actualizará las alarmas existentes y también creará alarmas con wildcard tags.
 
 ### Amazon RDS
 
-For Amazon RDS, you can add this tag to an RDS database cluster or database instance at any time in order to create the default alarm set as well as any custom alarms that have been specified as tags on the cluster or instance.
-
+Para Amazon RDS, puede agregar esta etiqueta a un clúster de base de datos de RDS o a una instancia de base de datos en cualquier momento para crear el conjunto de alarmas predeterminado, así como cualquier alarma personalizada que se haya especificado como etiquetas en el clúster o instancia.
 
 ### AWS Lambda
 
-For AWS Lambda, you can add this tag to an AWS Lambda function at any time in order to create the default alarm set as well as any custom, function specific alarms.
+Para AWS Lambda, puede agregar esta etiqueta a una función de AWS Lambda en cualquier momento para crear el conjunto de alarmas predeterminado, así como cualquier alarma personalizada y específica de la función.
 
+## Soporte de notificación
 
-## Notification Support
+Puede definir un tema de Amazon Simple Notification Service (Amazon SNS) que la función Lambda especificará como destino de notificación para las alarmas creadas. The deployment instructions include an SNS topic that you can deploy and use with the solution.  You provide the Amazon SNS Topic Amazon Resource Name (ARN) with the **AlarmNotificationARN** parameter when you deploy the CloudWatchAutoAlarms.yaml CloudFormation template.  This parameter sets the **`DEFAULT_ALARM_SNS_TOPIC_ARN`** environment variable to the ARN you specified.  If you leave the **AlarmNotificationARN** parameter value blank, then this environment variable is not set and created alarms won't use notifications.  
 
-You can define an Amazon Simple Notification Service (Amazon SNS) topic that the Lambda function will specify as the notification target for created alarms. The deployment instructions include an SNS topic that you can deploy and use with the solution.  You provide the Amazon SNS Topic Amazon Resource Name (ARN) with the **AlarmNotificationARN** parameter when you deploy the CloudWatchAutoAlarms.yaml CloudFormation template.  This parameter sets the **`DEFAULT_ALARM_SNS_TOPIC_ARN`** environment variable to the ARN you specified.  If you leave the **AlarmNotificationARN** parameter value blank, then this environment variable is not set and created alarms won't use notifications.  
+La solución también le permite especificar un topic SNS único por recurso de AWS configurando un tag con la key **`notify`** y el valor establecido en el ARN del tema de SNS que debe ser el destino de las alarmas para ese recurso específico. Para cualquier recurso que no tenga configurado el tag de **`notify`**, se utilizará el ARN del topic SNS predeterminado.
 
-The solution also enables you to specify a unique SNS topic per AWS resource by setting a tag with key **`notify`** and the value set to the SNS topic ARN that should be targeted for alarms for that specific resource.  For any resources that don't have the **`notify`** tag set, the default SNS topic ARN will be used. 
-
-You can apply a tagging strategy that includes the **`notify`** tag for groups of resources to notify on specific groups of resources.  For example, consider a tag with key **`Team`** and value **`Windows`**.  You could align tagging of this specific key / value with the SNS topic for Windows support(e.g. **`notify`**: arn:aws:sns:us-east-1:123456789012:WindowsSupport)
+You can apply a tagging strategy that includes the **`notify`** tag for groups of resources to notify on specific groups of resources.  For example, consider a tag with key **`Team`** and value **`Windows`**.  You could align tagging of this specific key / value with the SNS topic for Windows support (e.g. **`notify`**: arn:aws:sns:us-east-1:123456789012:WindowsSupport)
 
 ## Changing the default alarm set
 
@@ -200,7 +197,7 @@ You can add any standard Amazon CloudWatch metric for Amazon EC2 or AWS Lambda i
 
 ## Wildcard support for dimension values on EC2 instance alarms
 
-The solution allows you to specify a wildcard for a dimension value in order to create CloudWatch alarms for all dimension values.  This is particularly useful for creating alarms for all partitions and drives on a system or where the value of a dimension is not known or can vary across EC2 instances.
+La solución le permite especificar un comodín para un valor de dimensión para crear alarmas de CloudWatch para todos los valores de dimensión. Esto es particularmente útil para crear alarmas para todas las particiones y unidades de un sistema o cuando el valor de una dimensión no se conoce o puede variar entre instancias EC2.
 
 For example, the CloudWatch agent publishes the `disk_used_percent` metric for disks attached to a Linux EC2 instance.  The dimensions for this metric for Amazon Linux are `device name`, `fstype`, and `path`.
 
@@ -210,13 +207,13 @@ The alarm tag for this metric is hardcoded in the `default_alarms` python dictio
 * fstype: xfs
 * path: /
 
-this is equivalent to the following default tag in the solution: 
+esto es equivalente a la siguiente etiqueta predeterminada en la solución:
 
 ```
 AutoAlarm-CWAgent-disk_used_percent-device-nvme0n1p1-fstype-xfs-path-/-GreaterThanThreshold-5m-1-Average-Created_by_CloudWatchAutoAlarms
 ```
 
-If you want to alarm on all disks attached to an EC2 instance then you must specify the device name, file system type, and path dimension values for each disk, which will vary.  Each EC2 instance may also have a different number of disks and different dimension values.
+Si desea activar una alarma en todos los discos conectados a una instancia EC2, debe especificar el nombre del dispositivo, el tipo de sistema de archivos y los valores de dimensión de ruta para cada disco, que variarán. Cada instancia EC2 también puede tener una cantidad diferente de discos y diferentes valores de dimensión.
 
 The solution addresses this requirement by allowing you to specify a wildcard for the dimension value.  For example, the Alarm tag for `disk_used_percent` For Amazon Linux specified in the `default_alarms` dictionary would change to:
 
@@ -238,14 +235,14 @@ AutoAlarm-CWAgent-disk_used_percent-device-*-fstype-xfs-path-*-GreaterThanThresh
 
 In this example, we have specified a wildcard for the `device` and `path` dimensions.  Using this example, the solution will query CloudWatch metrics and create an alarm for each unique device and path dimension values for each Amazon Linux instance.  
 
-If your EC2 instance had two disks with the following dimensions:
+Si su instancia EC2 tuviera dos discos con las siguientes dimensiones:
 
-*Disk 1*
+*Disco 1*
 * device: nvme0n1p1
 * fstype: xfs
 * path: /
 
-*Disk 2*
+*Disco 2*
 * device: nvme1n1p1
 * fstype: xfs
 * path: /disk2
@@ -255,9 +252,9 @@ Then two alarms would be created using a `*` wildcard for the `device` and `path
 * AutoAlarm-\<InstanceId>-CWAgent-disk_used_percent-device-nvme1n1p1-fstype-xfs-path-/disk2-GreaterThanThreshold-80-5m-1p-Average-Created_by_CloudWatchAutoAlarms
 
 
-In order to identify the dimension values, the solution queries CloudWatch metrics to identify all metrics that match the fixed dimension values for the metric name specified.  It then iterates through the dimensions whose values are specified as a wildcard to identify the specific dimension values required for the alarm. 
+Para identificar los valores de dimensión, la solución consulta las métricas de CloudWatch para identificar todas las métricas que coinciden con los valores de dimensión fijos para el nombre de métrica especificado. Luego recorre en iteración las dimensiones cuyos valores se especifican como comodín para identificar los valores de dimensión específicos necesarios para la alarma.
 
-Because the solution relies on the available metrics in CloudWatch, it will only work after the CloudWatch agent has published and sent metrics to the CloudWatch service.  Since the solution is designed to run on instance launch, these metrics will not be available on first start since the CloudWatch service will not have received them yet.  
+Debido a que la solución se basa en las métricas disponibles en CloudWatch, solo funcionará después de que el agente de CloudWatch haya publicado y enviado métricas al servicio CloudWatch. Dado que la solución está diseñada para ejecutarse al iniciar la instancia, estas métricas no estarán disponibles en el primer inicio, ya que el servicio CloudWatch aún no las habrá recibido. 
 
 In order to resolve this, you should schedule the solution to run on schedule using the `scan` payload:
 ```json 
@@ -266,17 +263,17 @@ In order to resolve this, you should schedule the solution to run on schedule us
 }
 ```
 
-This will provide sufficient time for the CloudWatch agent to publish metrics for new instances.  You can schedule the frequency of execution based on the acceptable timeframe for which wildcard based alarms for new instances are not yet created.
+Esto proporcionará tiempo suficiente para que el agente de CloudWatch publique métricas para nuevas instancias. Puede programar la frecuencia de ejecución según el período de tiempo aceptable para el cual aún no se crean alarmas basadas en comodines para nuevas instancias.
 
 
-## Creating CloudWatch Anomaly Detection Alarms
+## Creación de alarmas Anomaly Detection en CloudWatch
 
 CloudWatch Anomaly Detection Alarms are supported using the comparison operators `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, or `GreaterThanUpperThreshold`.
 
 When you specify one of these comparison operators, the solution creates an anomaly detection alarm and uses the value for the tag key as the threshold.  Refer to the [CloudWatch documentation for more details on the threshold and anomaly detection](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Anomaly_Detection.html).
 
-CloudWatch Anomaly detection uses machine learning models based on the metric, dimensions, and statistic chosen.  If you create an alarm without a current model, CloudWatch Alarms creates a new model using these parameters from your alarm configuration.  
-For new models, it can take up to 3 hours for the actual anomaly detection band to appear in your graph. It can take up to two weeks for the new model to train, so the anomaly detection band shows more accurate expected values.  Refer to the documentation for more details.
+La detección de anomalías de CloudWatch utiliza modelos de aprendizaje automático basados ​​en la métrica, las dimensiones y las estadísticas elegidas. Si crea una alarma sin un modelo actual, CloudWatch Alarms crea un nuevo modelo utilizando estos parámetros de su configuración de alarma.
+Para los modelos nuevos, la banda de detección de anomalías real puede tardar hasta 3 horas en aparecer en el gráfico. El nuevo modelo puede tardar hasta dos semanas en entrenarse, por lo que la banda de detección de anomalías muestra valores esperados más precisos. Consulte la documentación para obtener más detalles.
 
 The solution includes commented out code for creating a CloudWatch Anomaly Detection Alarm for CPU Utilization in the `default_alarms` dictionary: 
 
@@ -290,7 +287,7 @@ The solution includes commented out code for creating a CloudWatch Anomaly Detec
         # }
 ```
 
-You can uncomment and update this code to test out anomaly detection support.  
+Puede descomentar y actualizar este código para probar la compatibilidad con la detección de anomalías. 
 
 The solution implements the environment variable `ALARM_DEFAULT_ANOMALY_THRESHOLD` as an example threshold you can use for your anomaly detection alarms.
 
@@ -333,9 +330,9 @@ You can deploy the CloudWatchAutoAlarms lambda function into a multi-account, mu
 
 Follow [steps 1 through 7 in the normal deployment process](#deploy).   For step #3 and step #4, enter your AWS Organizations ID for the **OrganizationID** parameter in the [sample S3 CloudFormation template](./CloudWatchAutoAlarms-S3.yaml) and [sample SNS CloudFormation template](./CloudWatchAutoAlarms-SNS.yaml).  This will update the resource policy to allow access to all accounts in your AWS organization.
 
-Continue with the following steps to deploy a service managed AWS StackSet for the CloudWatchAutoAlarms lambda function.  This will deploy the CloudWatchAutoAlarms Lambda function into the organization units that you specify.  The lambda function will also be automatically deployed to new accounts in the AWS organization.
+Continúe con los siguientes pasos para implementar un AWS StackSet administrado por el servicio para la función lambda CloudWatchAutoAlarms. Esto implementará la función Lambda de CloudWatchAutoAlarms en las unidades organizativas que especifique. La función lambda también se implementará automáticamente en cuentas nuevas en la organización de AWS.
 
-1. Use the [CloudWatchAutoAlarms CloudFormation template](./CloudWatchAutoAlarms.yaml) to deploy the Lambda function across multiple regions and accounts in your AWS Organization.  This walkthrough deploys a service managed CloudFormation StackSet in the AWS Organizations master account.  You must also specify the account ID where the S3 deployment bucket was created so the same S3 bucket is used across account deployments in your organization.  Use the following command to deploy the service managed CloudFormation StackSet:
+1. Use the [CloudWatchAutoAlarms CloudFormation template](./CloudWatchAutoAlarms.yaml) to deploy the Lambda function across multiple regions and accounts in your AWS Organization.  Este tutorial implementa un CloudFormation StackSet administrado por el servicio en la cuenta master de AWS Organizations. También debe especificar el ID de la cuenta donde se creó el bucket S3 de implementación para que se utilice el mismo bucket S3 en todas las implementaciones de cuentas de su organización. Utilice el siguiente comando para implementar el servicio CloudFormation StackSet administrado:
 
        aws cloudformation create-stack-set --stack-set-name amazon-cloudwatch-auto-alarms \
        --template-body file://CloudWatchAutoAlarms.yaml \
@@ -346,7 +343,7 @@ Continue with the following steps to deploy a service managed AWS StackSet for t
        ParameterKey=S3DeploymentBucket,ParameterValue=<S3 bucket with your deployment package> \
        --region <enter your aws region id, e.g. "us-east-1">
 
-      2. After the StackSet is created, you can specify which AWS accounts and regions the StackSet should be deployed.  For service managed StackSets, you specify your AWS Organization ID or AWS Organizational Unit IDs to deploy the lambda function to all current and future accounts within them.   Use the following AWS CLI command to deploy the StackSet to your organization / organizational units:
+      2. Una vez creado el StackSet, puede especificar qué cuentas y regiones de AWS se debe implementar el StackSet. Para los StackSets administrados por el servicio, especifique su ID de organización de AWS o los ID de unidad organizativa de AWS para implementar la función lambda en todas las cuentas actuales y futuras dentro de ellos. Utilice el siguiente comando de AWS CLI para implementar StackSet en su organización/unidades organizativas:
 
        aws cloudformation create-stack-instances --stack-set-name amazon-cloudwatch-auto-alarms \
        --operation-id amazon-cloudwatch-auto-alarms-deployment-$(date | md5) \
@@ -354,14 +351,14 @@ Continue with the following steps to deploy a service managed AWS StackSet for t
        --regions <enter the target regions where the lambda function should be deployed e.g. "us-east-1"> \
        --region <enter your aws region id, e.g. "us-east-1">
 
-   You can monitor the progress and status of the StackSet operation in the AWS CloudFormation service console.
+   Puede monitorear el progreso y el estado de la operación StackSet en la consola del servicio AWS CloudFormation.
 
    Once the deployment is complete, the status will change from **RUNNING** to **SUCCEEDED**.
 
 ## Security
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+Consulte [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) para obtener más información.
 
 ## License
 
-This library is licensed under the MIT-0 License. See the LICENSE file.
+Esta biblioteca tiene la licencia MIT-0. Para mas, ver el archivo de LICENCIA.
