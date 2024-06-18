@@ -181,27 +181,25 @@ Puede definir un tema de Amazon Simple Notification Service (Amazon SNS) que la 
 
 La solución también le permite especificar un topic SNS único por recurso de AWS configurando un tag con la key **`notify`** y el valor establecido en el ARN del tema de SNS que debe ser el destino de las alarmas para ese recurso específico. Para cualquier recurso que no tenga configurado el tag de **`notify`**, se utilizará el ARN del topic SNS predeterminado.
 
-You can apply a tagging strategy that includes the **`notify`** tag for groups of resources to notify on specific groups of resources.  For example, consider a tag with key **`Team`** and value **`Windows`**.  You could align tagging of this specific key / value with the SNS topic for Windows support (e.g. **`notify`**: arn:aws:sns:us-east-1:123456789012:WindowsSupport)
+Puede aplicar una estrategia de etiquetado que incluya la etiqueta de **`notify`** para que grupos de recursos notifiquen sobre grupos de recursos específicos. Por ejemplo, considere una etiqueta con la clave **`Team`** y el valor **`Windows`**. Puede alinear el etiquetado de esta clave/valor específico con el tema de SNS para la compatibilidad con Windows (por ejemplo, **`notify`**: arn:aws:sns:us-east-1:123456789012:WindowsSupport)
 
-## Changing the default alarm set
+## Cambiar el conjunto de alarma predeterminado
 
-You can add, remove, and customize alarms in the default alarm set.  The default alarms are defined in the **default_alarms** python dictionary in [cw_auto_alarms.py](src/cw_auto_alarms.py).
+Puede agregar, eliminar y personalizar alarmas en el conjunto de alarmas predeterminado. Las alarmas predeterminadas se definen en el diccionario de Python **default_alarms** en [cw_auto_alarms.py](src/cw_auto_alarms.py).
 
-In order to create an alarm, you must uniquely identify the metric that you want to alarm on.  Standard Amazon EC2 metrics include the **InstanceId** dimension to uniquely identify each standard metric associated with an EC2 instance.  If you want to add an alarm based upon a standard EC2 instance metric, then you can use the tag name syntax:
-AutoAlarm-AWS/EC2-\<**MetricName**>-\<**ComparisonOperator**>-\<**Period**>-\<**EvaluationPeriods**>-\<**Statistic**>-\<**Description**>
-This syntax doesn't include any dimension names because the InstanceId dimension is used for metrics in the **AWS/EC2** namespace.  These AWS provided EC2 metrics are common across all platforms for EC2.
+Para crear una alarma, debe identificar de forma exclusiva la métrica sobre la que desea generar la alarma. Las métricas estándar de Amazon EC2 incluyen la dimensión **InstanceId** para identificar de forma única cada métrica estándar asociada con una instancia EC2. Si desea agregar una alarma basada en una métrica de instancia EC2 estándar, puede usar la sintaxis del nombre de la etiqueta: AutoAlarm-AWS/EC2-<**MetricName**>-<**ComparisonOperator**>-<**Period**>-<**EvaluationPeriods**>-<**Statistic**>-<**Description**> Esta sintaxis no incluye ningún nombre de dimensión porque la dimensión InstanceId se utiliza para métricas en el espacio de nombres AWS/EC2. Estas métricas de EC2 proporcionadas por AWS son comunes en todas las plataformas para EC2.
 
-Similarly, AWS Lambda metrics include the **FunctionName** dimension to uniquely identify each standard metric associated with an AWS Lambda function.  If you want to add an alarm based upon a standard AWS Lambda metric, then you can use the tag name syntax:
-AutoAlarm-AWS/Lambda-\<**MetricName**>-\<**ComparisonOperator**>-\<**Period**>-\<**EvaluationPeriods**>-\<**Statistic**>-\<**Description**>
-You can add any standard Amazon CloudWatch metric for Amazon EC2 or AWS Lambda into the **default_alarms** dictionary under the **AWS/EC2** or **AWS/Lambda** dictionary key using this tag syntax.
+De manera similar, las métricas de AWS Lambda incluyen la dimensión FunctionName para identificar de forma única cada métrica estándar asociada con una función de AWS Lambda. Si desea agregar una alarma basada en una métrica estándar de AWS Lambda, puede utilizar la sintaxis del nombre de la etiqueta: AutoAlarm-AWS/Lambda-<MetricName>-<ComparisonOperator>-<Period>-<EgressionPeriods>-<Statistic>- <Descripción> Puede agregar cualquier métrica estándar de Amazon CloudWatch para Amazon EC2 o AWS Lambda al diccionario default_alarms en la clave del diccionario AWS/EC2 o AWS/Lambda utilizando esta sintaxis de etiqueta.
 
-## Wildcard support for dimension values on EC2 instance alarms
+De manera similar, las métricas de AWS Lambda incluyen la dimensión **FunctionName** para identificar de forma única cada métrica estándar asociada con una función de AWS Lambda. Si desea agregar una alarma basada en una métrica estándar de AWS Lambda, puede utilizar la sintaxis del nombre de la etiqueta: AutoAlarm-AWS/Lambda-<**MetricName**>-<**ComparisonOperator**>-<**Period**>-<**EgressionPeriods**>-<**Statistic**>-<**Description**> Puede agregar cualquier métrica estándar de Amazon CloudWatch para Amazon EC2 o AWS Lambda al diccionario default_alarms en la clave del diccionario **AWS/EC2** o **AWS/Lambda** utilizando esta sintaxis de etiqueta.
+
+## Soporte Wildcard para valores de dimensión en alarmas de instancia EC2
 
 La solución le permite especificar un comodín para un valor de dimensión para crear alarmas de CloudWatch para todos los valores de dimensión. Esto es particularmente útil para crear alarmas para todas las particiones y unidades de un sistema o cuando el valor de una dimensión no se conoce o puede variar entre instancias EC2.
 
-For example, the CloudWatch agent publishes the `disk_used_percent` metric for disks attached to a Linux EC2 instance.  The dimensions for this metric for Amazon Linux are `device name`, `fstype`, and `path`.
+Por ejemplo, el agente de CloudWatch publica la métrica `disk_used_percent` para los discos conectados a una instancia EC2 de Linux. Las dimensiones de esta métrica para Amazon Linux son el `device name`, `fstype` y `path`.
 
-The alarm tag for this metric is hardcoded in the `default_alarms` python dictionary in `cw_auto_alarms.py` to create an alarm for the root volume whose default dimensions and values are: 
+La etiqueta de alarma para esta métrica está codificada en el diccionario de Python `default_alarms` en `cw_auto_alarms.py` para crear una alarma para el volumen raíz cuyas dimensiones y valores predeterminados son:
 
 * device: nvme0n1p1
 * fstype: xfs
@@ -215,7 +213,7 @@ AutoAlarm-CWAgent-disk_used_percent-device-nvme0n1p1-fstype-xfs-path-/-GreaterTh
 
 Si desea activar una alarma en todos los discos conectados a una instancia EC2, debe especificar el nombre del dispositivo, el tipo de sistema de archivos y los valores de dimensión de ruta para cada disco, que variarán. Cada instancia EC2 también puede tener una cantidad diferente de discos y diferentes valores de dimensión.
 
-The solution addresses this requirement by allowing you to specify a wildcard for the dimension value.  For example, the Alarm tag for `disk_used_percent` For Amazon Linux specified in the `default_alarms` dictionary would change to:
+La solución aborda este requisito permitiéndole especificar un comodín para el valor de dimensión. Por ejemplo, la etiqueta de alarma para `disk_used_percent` para Amazon Linux especificada en el diccionario `default_alarms` cambiaría a:
 
 ```python
                 {
@@ -227,13 +225,13 @@ The solution addresses this requirement by allowing you to specify a wildcard fo
                 },
 ```
 
-This yields the equivalent alarm tag:
+Esto produce la etiqueta de alarma equivalente:
 
 ```
 AutoAlarm-CWAgent-disk_used_percent-device-*-fstype-xfs-path-*-GreaterThanThreshold-5m-1-Average-Created_by_CloudWatchAutoAlarms
 ```
 
-In this example, we have specified a wildcard for the `device` and `path` dimensions.  Using this example, the solution will query CloudWatch metrics and create an alarm for each unique device and path dimension values for each Amazon Linux instance.  
+En este ejemplo, hemos especificado un comodín para las dimensiones `device` y `path`. Con este ejemplo, la solución consultará las métricas de CloudWatch y creará una alarma para cada dispositivo único y valores de dimensión de ruta para cada instancia de Amazon Linux.
 
 Si su instancia EC2 tuviera dos discos con las siguientes dimensiones:
 
@@ -247,35 +245,33 @@ Si su instancia EC2 tuviera dos discos con las siguientes dimensiones:
 * fstype: xfs
 * path: /disk2
 
-Then two alarms would be created using a `*` wildcard for the `device` and `path` dimensions:
+Luego se crearían dos alarmas usando un comodín `*` para las dimensiones `device` y `path`:
 * AutoAlarm-\<InstanceId>-CWAgent-disk_used_percent-device-nvme0n1p1-fstype-xfs-path-/-GreaterThanThreshold-80-5m-1p-Average-Created_by_CloudWatchAutoAlarms
 * AutoAlarm-\<InstanceId>-CWAgent-disk_used_percent-device-nvme1n1p1-fstype-xfs-path-/disk2-GreaterThanThreshold-80-5m-1p-Average-Created_by_CloudWatchAutoAlarms
-
 
 Para identificar los valores de dimensión, la solución consulta las métricas de CloudWatch para identificar todas las métricas que coinciden con los valores de dimensión fijos para el nombre de métrica especificado. Luego recorre en iteración las dimensiones cuyos valores se especifican como comodín para identificar los valores de dimensión específicos necesarios para la alarma.
 
 Debido a que la solución se basa en las métricas disponibles en CloudWatch, solo funcionará después de que el agente de CloudWatch haya publicado y enviado métricas al servicio CloudWatch. Dado que la solución está diseñada para ejecutarse al iniciar la instancia, estas métricas no estarán disponibles en el primer inicio, ya que el servicio CloudWatch aún no las habrá recibido. 
 
-In order to resolve this, you should schedule the solution to run on schedule using the `scan` payload:
+Para resolver esto, debe programar la solución para que se ejecute según lo programado utilizando la carga útil `scan`:
 ```json 
 {
 "action": "scan"
 }
 ```
-
 Esto proporcionará tiempo suficiente para que el agente de CloudWatch publique métricas para nuevas instancias. Puede programar la frecuencia de ejecución según el período de tiempo aceptable para el cual aún no se crean alarmas basadas en comodines para nuevas instancias.
-
 
 ## Creación de alarmas Anomaly Detection en CloudWatch
 
-CloudWatch Anomaly Detection Alarms are supported using the comparison operators `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, or `GreaterThanUpperThreshold`.
+Las alarmas de Anomaly Detection de CloudWatch se admiten mediante los operadores de comparación `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold` o `GreaterThanUpperThreshold`.
 
-When you specify one of these comparison operators, the solution creates an anomaly detection alarm and uses the value for the tag key as the threshold.  Refer to the [CloudWatch documentation for more details on the threshold and anomaly detection](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Anomaly_Detection.html).
+Cuando especifica uno de estos operadores de comparación, la solución crea una alarma de anomaly detection y utiliza el valor de la key del tag como umbral. Consulte la [documentación de CloudWatch para obtener más detalles sobre el umbral y la detección de anomalías] [documentación de CloudWatch para obtener más detalles sobre el umbral y la anomaly detection](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Anomaly_Detection.html).
 
 La detección de anomalías de CloudWatch utiliza modelos de aprendizaje automático basados ​​en la métrica, las dimensiones y las estadísticas elegidas. Si crea una alarma sin un modelo actual, CloudWatch Alarms crea un nuevo modelo utilizando estos parámetros de su configuración de alarma.
+
 Para los modelos nuevos, la banda de detección de anomalías real puede tardar hasta 3 horas en aparecer en el gráfico. El nuevo modelo puede tardar hasta dos semanas en entrenarse, por lo que la banda de detección de anomalías muestra valores esperados más precisos. Consulte la documentación para obtener más detalles.
 
-The solution includes commented out code for creating a CloudWatch Anomaly Detection Alarm for CPU Utilization in the `default_alarms` dictionary: 
+La solución incluye código comentado para crear una alarma de detección de anomalías de CloudWatch para la utilización de la CPU en el diccionario `default_alarms`:
 
 ```python
         # This is an example alarm using anomaly detection
@@ -289,50 +285,50 @@ The solution includes commented out code for creating a CloudWatch Anomaly Detec
 
 Puede descomentar y actualizar este código para probar la compatibilidad con la detección de anomalías. 
 
-The solution implements the environment variable `ALARM_DEFAULT_ANOMALY_THRESHOLD` as an example threshold you can use for your anomaly detection alarms.
+La solución implementa la variable de entorno `ALARM_DEFAULT_ANOMALY_THRESHOLD` como un umbral de ejemplo que puede usar para sus alarmas de detección de anomalías.
 
-## Alarming on custom Amazon EC2 metrics
+## Alarmas en métricas custom de Amazon EC2
 
-Metrics captured by the Amazon CloudWatch agent are considered custom metrics.  These metrics are created in the **CWAgent** namespace by default.  Custom metrics may have any number of dimensions in order to uniquely identify a metric.  Additionally, the metric dimensions may be named differently based upon the underlying platform for the EC2 instance.
+Las métricas capturadas por el agente de Amazon CloudWatch se consideran métricas personalizadas. Estas métricas se crean en el espacio de nombres **CWAgent** de forma predeterminada. Las métricas personalizadas pueden tener cualquier cantidad de dimensiones para identificar de forma única una métrica. Además, las dimensiones de las métricas pueden recibir nombres diferentes según la plataforma subyacente de la instancia EC2.
 
-For example, the metric name used to measure the disk space utilization is named **disk_used_percent** in Linux and **LogicalDisk % Free Space** in Windows.  The dimensions are also different, in Linux you must also include the **device**, **fstype**, and **path** dimensions in order to uniquely identify a disk.  In Windows, you must include the **objectname** and **instance** dimensions.
+Por ejemplo, el nombre de la métrica utilizada para medir la utilización del espacio en disco se denomina **disk_used_percent** en Linux y **LogicalDisk % Free Space** en Windows. Las dimensiones también son diferentes; en Linux también debe incluir las dimensiones **device**, **fstype** y **path** para poder identificar de forma única un disco. En Windows, debe incluir las dimensiones **objectname** e **instance**.
 
-Consequently, it is more difficult to automatically create alarms across different platforms for custom CloudWatch EC2 instance metrics.
+En consecuencia, es más difícil crear alarmas automáticamente en diferentes plataformas para métricas personalizadas de instancias EC2 de CloudWatch.
 
-The **disk_used_percent** metric for Linux has the additional dimensions:  **\'device', 'fstype', 'path'**.  For metrics with custom dimensions, you can include the dimension name and value in the tag key syntax:
+La métrica **disk_used_percent** para Linux tiene las dimensiones adicionales: **\'device', 'fstype', 'path'**. Para métricas con dimensiones personalizadas, puede incluir el nombre y el valor de la dimensión en la sintaxis de la key del tag:
 AutoAlarm-\<**Namespace**>-\<**MetricName**>-\<**DimensionName-DimensionValue...**>-\<**ComparisonOperator**>-\<**Period**>-\<**EvaluationPeriods**>-\<**Statistic**>-\<**Description**>
-For example, the tag name used to create an alarm for the average **disk_used_percent** over a 5 minute period for the root partition on an Amazon Linux instance in the **CWAgent** namespace is:
+Por ejemplo, el nombre del tag utilizado para crear una alarma para el **disk_used_percent** promedio durante un período de 5 minutos para la partición raíz en una instancia de Amazon Linux en el espacio de nombres **CWAgent** es:
 **AutoAlarm-CWAgent-disk_used_percent-device-xvda1-fstype-xfs-path-/-GreaterThanThreshold-5m-1-Average-exampleDescription**
-Where the **device** dimension has a value of **xvda1**, the **fstype** dimension has a value of **xfs**, and the **path** dimension has a value of **/**.
+Donde la dimensión **device** tiene un valor de **xvda1**, la dimensión **fstype** tiene un valor de **xfs** y la dimensión **path** tiene un valor de **/**.
 
-This syntax and approach allows you to collectively support metrics with different numbers of dimensions and names.  Using this syntax, you can add alarms for metrics with custom dimensions to the appropriate platform in the **default_alarms** dictionary in [cw_auto_alarms.py](src/cw_auto_alarms.py)
+Esta sintaxis y enfoque le permiten admitir colectivamente métricas con diferentes números de dimensiones y nombres. Con esta sintaxis, puede agregar alarmas para métricas con dimensiones personalizadas a la plataforma adecuada en el diccionario **default_alarms** en [cw_auto_alarms.py](src/cw_auto_alarms.py)
 
-You should also make sure that the **CLOUDWATCH_APPEND_DIMENSIONS** environment variable is set correctly in order to ensure that created alarms include these dimensions.  The lambda function will dynamically lookup the values for these dimensions at runtime.
+También debe asegurarse de que la variable de entorno **CLOUDWATCH_APPEND_DIMENSIONS** esté configurada correctamente para garantizar que las alarmas creadas incluyan estas dimensiones. La función lambda buscará dinámicamente los valores de estas dimensiones en tiempo de ejecución.
 
-If your dimensions name uses the default separator character '-', then you can update the **alarm_separator** variable in [cw_auto_alarms.py](src/cw_auto_alarms.py) with an alternative seperator character such as '~'.
+Si el nombre de sus dimensiones utiliza el carácter separador predeterminado '-', puede actualizar la variable **alarm_separator** en [cw_auto_alarms.py](src/cw_auto_alarms.py) con un carácter separador alternativo como '~'.
 
-## Create a specific alarm for a specific EC2 instance using tags
+## Cree una alarma específica para una instancia EC2 específica usando etiquetas
 
-You can create alarms that are specific to an individual EC2 instance by adding a tag to the instance using the tag key syntax described in [changing the default alarm set](#changing-the-default-alarm-set).  Simply add a tag to the instance on launch or restart the instance after you have added the tag.  You can also update the thresholds for created alarms by updating the tag values, causing the alarm to be updated when the instance is stopped and started.
+Puede crear alarmas que sean específicas de una instancia EC2 individual agregando una etiqueta a la instancia usando la sintaxis de clave de etiqueta descrita en [cambiar el conjunto de alarmas predeterminado](#changing-the-default-alarm-set). Simplemente agregue una etiqueta a la instancia al iniciarla o reinicie la instancia después de haber agregado la etiqueta. También puede actualizar los umbrales de las alarmas creadas actualizando los valores de las etiquetas, lo que hace que la alarma se actualice cuando se detiene e inicia la instancia.
 
-For example, to add an alarm for the Amazon EC2 **StatusCheckFailed** CloudWatch metric for an existing EC2 instance:
-1. On the **Tags** tab, choose **Manage tags**, and then choose **Add tag**. For **Key**, enter **AutoAlarm-AWS/EC2-StatusCheckFailed-GreaterThanThreshold-5m-1-Average-exampleDescription**. For Value, enter **1**. Choose **Save**.
-2. Stop and start the Amazon EC2 instance.
-3. After the instance is stopped and restarted, go to the **Alarms** page in the CloudWatch console to confirm that the alarm was created.  You should find a new alarm named **AutoAlarm-<instance id omitted>-StatusCheckFailed-GreaterThanThreshold-1-5m-1p-exampleDescription**.
+Por ejemplo, para agregar una alarma para la métrica de CloudWatch **StatusCheckFailed** de Amazon EC2 para una instancia EC2 existente:
+1. En la pestaña **Tags**, elija **Manage tags** y luego elija **Add tag**. Para **Key**, ingrese **AutoAlarm-AWS/EC2-StatusCheckFailed-GreaterThanThreshold-5m-1-Average-exampleDescription**. Para Valor, ingrese **1**. Elija **Save**.
+2. Detenga e inicie la instancia de Amazon EC2.
+3. Después de detener y reiniciar la instancia, vaya a la página **Alarmas** en la consola de CloudWatch para confirmar que se creó la alarma. Deberías encontrar una nueva alarma llamada **AutoAlarm-<instance id omitted>-StatusCheckFailed-GreaterThanThreshold-1-5m-1p-exampleDescription**.
 
-## Creating a specific alarm for a specific AWS Lambda function using tags
+## Crear una alarma específica para una función específica de AWS Lambda mediante etiquetas
 
-You can create alarms that are specific to an individual AWS Lambda function by adding a tag to the instance using the tag key syntax described in [changing the default alarm set](#changing-the-default-alarm-set).
+Puede crear alarmas que sean específicas de una función individual de AWS Lambda agregando una etiqueta a la instancia utilizando la sintaxis de clave de etiqueta descrita en [cambiar el conjunto de alarmas predeterminado](#changing-the-default-alarm-set).
 
-## Deploying in a multi-region, multi-account environment
+## Implementación en un entorno multiregión y multicuenta
 
-You can deploy the CloudWatchAutoAlarms lambda function into a multi-account, multi-region environment by using [CloudFormation StackSets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/what-is-cfnstacksets.html).
+Puede implementar la función lambda de CloudWatchAutoAlarms en un entorno de múltiples cuentas y múltiples regiones mediante [CloudFormation StackSets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/what-is-cfnstacksets.html).
 
-Follow [steps 1 through 7 in the normal deployment process](#deploy).   For step #3 and step #4, enter your AWS Organizations ID for the **OrganizationID** parameter in the [sample S3 CloudFormation template](./CloudWatchAutoAlarms-S3.yaml) and [sample SNS CloudFormation template](./CloudWatchAutoAlarms-SNS.yaml).  This will update the resource policy to allow access to all accounts in your AWS organization.
+Siga [los pasos del 1 al 7 del proceso de implementación normal](#deploy). Para los pasos 3 y 4, ingrese su ID de AWS Organizations para el parámetro **OrganizationID** en el [template de ejemplo de S3 CloudFormation](./CloudWatchAutoAlarms-S3.yaml) y el [template de ejemplo SNS CloudFormation](./CloudWatchAutoAlarms-SNS.yaml). Esto actualizará la política de recursos para permitir el acceso a todas las cuentas de su organización de AWS.
 
 Continúe con los siguientes pasos para implementar un AWS StackSet administrado por el servicio para la función lambda CloudWatchAutoAlarms. Esto implementará la función Lambda de CloudWatchAutoAlarms en las unidades organizativas que especifique. La función lambda también se implementará automáticamente en cuentas nuevas en la organización de AWS.
 
-1. Use the [CloudWatchAutoAlarms CloudFormation template](./CloudWatchAutoAlarms.yaml) to deploy the Lambda function across multiple regions and accounts in your AWS Organization.  Este tutorial implementa un CloudFormation StackSet administrado por el servicio en la cuenta master de AWS Organizations. También debe especificar el ID de la cuenta donde se creó el bucket S3 de implementación para que se utilice el mismo bucket S3 en todas las implementaciones de cuentas de su organización. Utilice el siguiente comando para implementar el servicio CloudFormation StackSet administrado:
+1. Utilice el [template CloudWatchAutoAlarms de CloudFormation](./CloudWatchAutoAlarms.yaml) para implementar la función Lambda en varias regiones y cuentas de su organización de AWS. Este tutorial implementa un CloudFormation StackSet administrado por el servicio en la cuenta maestra de AWS Organizations. También debe especificar el ID de la cuenta donde se creó el depósito S3 de implementación para que se utilice el mismo depósito S3 en todas las implementaciones de cuentas de su organización. Utilice el siguiente comando para implementar el servicio CloudFormation StackSet administrado:
 
        aws cloudformation create-stack-set --stack-set-name amazon-cloudwatch-auto-alarms \
        --template-body file://CloudWatchAutoAlarms.yaml \
@@ -353,12 +349,12 @@ Continúe con los siguientes pasos para implementar un AWS StackSet administrado
 
    Puede monitorear el progreso y el estado de la operación StackSet en la consola del servicio AWS CloudFormation.
 
-   Once the deployment is complete, the status will change from **RUNNING** to **SUCCEEDED**.
+   Una vez que se complete la implementación, el estado cambiará de **RUNNING** a **SUCCEEDED**.
 
-## Security
+## Seguridad
 
 Consulte [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) para obtener más información.
 
-## License
+## Licencia
 
 Esta biblioteca tiene la licencia MIT-0. Para mas, ver el archivo de LICENCIA.
