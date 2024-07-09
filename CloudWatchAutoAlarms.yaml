@@ -34,7 +34,7 @@ Resources:
     Properties:
       FunctionName: "CloudWatchAutoAlarms"
       Handler: cw_auto_alarms.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.12
       Role:  !GetAtt CloudWatchAutoAlarmLambdaRole.Arn
       MemorySize: !Ref Memory
       Timeout: 600
