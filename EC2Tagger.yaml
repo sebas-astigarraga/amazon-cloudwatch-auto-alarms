@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Remediation Lamabda to tag EC2 instances with tags specified in environment variable.
+Description: Remediation Lambda to tag EC2 instances with tags specified in environment variable.
 Parameters:
   Memory:
     Description: Memory to allocate to Lambda function
@@ -16,7 +16,7 @@ Resources:
     Properties:
       FunctionName: "EC2Tagger"
       Handler: index.handler
-      Runtime: python3.8
+      Runtime: python3.12
       Role:  !GetAtt LambdaFunctionRole.Arn
       MemorySize: !Ref Memory
       Timeout: 600
