@@ -230,7 +230,8 @@ def create_alarm_from_tag(id, alarm_tag, instance_info, metric_dimensions_map, s
     namespace = alarm_properties[1]
     MetricName = alarm_properties[2]
 
-    AlarmName = alarm_separator.join([alarm_identifier, id, namespace, MetricName])
+    InstanceName = next((tag['Value'] for tag in instance_info['Tags'] if tag['Key'] == 'Name'), '')
+    AlarmName = alarm_separator.join([alarm_identifier, id, InstanceName, namespace, MetricName])
 
     dimensions, properties_offset, AlarmName = determine_dimensions(AlarmName, alarm_separator, alarm_tag,
                                                                     instance_info, metric_dimensions_map,
