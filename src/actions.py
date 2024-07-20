@@ -27,6 +27,15 @@ valid_anomaly_detection_comparators = [
 
 valid_statistics = ["Average", "SampleCount", "Sum", "Minimum", "Maximum"]
 
+comparator_symbols = {
+    "GreaterThanOrEqualToThreshold": "≥",
+    "GreaterThanThreshold": ">",
+    "LessThanThreshold": "<",
+    "LessThanOrEqualToThreshold": "≤",
+    "LessThanLowerOrGreaterThanUpperThreshold": "<> or ><",
+    "LessThanLowerThreshold": "<",
+    "GreaterThanUpperThreshold": ">"
+}
 
 def boto3_client(resource, assumed_credentials=None):
     config = Config(retries=dict(max_attempts=40))
@@ -146,7 +155,7 @@ def process_rds_alarms(
             db_id,
             Namespace,
             MetricName,
-            ComparisonOperator,
+            comparator_symbols.get(ComparisonOperator, ComparisonOperator),
             str(tag["Value"]),
             Period,
             "{}p".format(EvaluationPeriods),
@@ -230,7 +239,7 @@ def process_lambda_alarms(
                     function_name,
                     Namespace,
                     MetricName,
-                    ComparisonOperator,
+                    comparator_symbols.get(ComparisonOperator, ComparisonOperator),
                     str(tag["Value"]),
                     Period,
                     "{}p".format(EvaluationPeriods),
@@ -324,7 +333,7 @@ def create_alarm_from_tag(
     AlarmName += alarm_separator.join(
         [
             "",
-            ComparisonOperator,
+            comparator_symbols.get(ComparisonOperator, ComparisonOperator),
             str(alarm_tag["Value"]),
             str(Period),
             "{}p".format(EvaluationPeriods),
