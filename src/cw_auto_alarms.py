@@ -20,6 +20,7 @@ append_dimensions = [dimension.strip() for dimension in append_dimensions.split(
 
 alarm_cpu_high_default_threshold = getenv("ALARM_CPU_HIGH_THRESHOLD", "75")
 alarm_cpu_high_anomaly_detection_default_threshold = getenv("ALARM_DEFAULT_ANOMALY_THRESHOLD", "2")
+alarm_status_check_failed_threshold = getenv("ALARM_STATUS_CHECK_FAILED_THRESHOLD", "1")
 alarm_memory_high_default_threshold = getenv("ALARM_MEMORY_HIGH_THRESHOLD", "75")
 alarm_disk_space_percent_free_threshold = getenv("ALARM_DISK_PERCENT_LOW_THRESHOLD", "20")
 alarm_disk_used_percent_threshold = 100 - int(alarm_disk_space_percent_free_threshold)
@@ -67,6 +68,13 @@ def lambda_handler(event, context):
                      default_evaluation_periods, default_statistic, 'Created_by_CloudWatchAutoAlarms']),
                 'Value': alarm_cpu_high_default_threshold
             },
+            {
+                'Key': alarm_separator.join(
+                    [alarm_identifier, 'AWS/EC2', 'StatusCheckFailed', 'GreaterThanThreshold', default_period, 
+                     default_evaluation_periods, default_statistic, 'Created_by_CloudWatchAutoAlarms']),
+                'Value': alarm_status_check_failed_threshold
+            },
+            
             # This is an example alarm using anomaly detection
             # {
             #     'Key': alarm_separator.join(
