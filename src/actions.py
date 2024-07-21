@@ -294,12 +294,12 @@ def create_alarm_from_tag(
     alarm_properties = alarm_tag["Key"].split(alarm_separator)
     namespace = alarm_properties[1]
     MetricName = alarm_properties[2]
-
+    id = id[-3:]
     InstanceName = next(
         (tag["Value"] for tag in instance_info["Tags"] if tag["Key"] == "Name"), ""
     )
     AlarmName = alarm_separator.join(
-        [alarm_identifier, id, InstanceName, namespace, MetricName]
+        [alarm_identifier, id, InstanceName, MetricName]
     )
 
     dimensions, properties_offset, AlarmName = determine_dimensions(
@@ -334,10 +334,7 @@ def create_alarm_from_tag(
         [
             "",
             comparator_symbols.get(ComparisonOperator, ComparisonOperator),
-            str(alarm_tag["Value"]),
-            str(Period),
-            "{}p".format(EvaluationPeriods),
-            Statistic,
+            str(alarm_tag["Value"])
         ]
     )
 
@@ -346,7 +343,7 @@ def create_alarm_from_tag(
         AlarmDescription = alarm_properties[
             (properties_offset + 6 + eval_period_offset)
         ]
-        AlarmName += alarm_separator + AlarmDescription
+
     except:
         logger.info("Description not supplied")
         AlarmDescription = None
