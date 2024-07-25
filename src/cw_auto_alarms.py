@@ -202,6 +202,7 @@ def lambda_handler(event, context):
                                    target_sns_topic_arn,
                                    cw_namespace, create_default_alarms_flag, alarm_separator, alarm_identifier)
         elif 'source' in event and event['source'] == 'aws.ec2' and event['detail']['state'] in ['terminated', 'stopped']:
+            instance_id = instance_id[-3:]
             instance_id = event['detail']['instance-id']
             result = delete_alarms(instance_id, alarm_identifier, alarm_separator)
         elif 'source' in event and event['source'] == 'aws.lambda' and event['detail'][
